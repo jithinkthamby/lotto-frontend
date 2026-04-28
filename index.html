@@ -46,13 +46,20 @@ async function generate(game){
   const res = await fetch(API + "/generate/" + game);
   const data = await res.json();
 
-  document.getElementById("lines").innerHTML =
-    data.map((l,i)=>`
-      <div class="card">
-        Line ${i+1}: ${l.line.join(" - ")}<br>
-        Score: ${l.score.toFixed(2)}
-      </div>
-    `).join("");
+  document.getElementById("results").innerHTML = `
+  <div class="card">
+    <h3>Latest Ontario Lotto Max</h3>
+    ${data.latest.numbers.join(" - ")}<br>
+    Date: ${data.latest.date}
+  </div>
+
+  <div class="card">
+    <h3>Last 5 Draws</h3>
+    ${data.history.map(h =>
+      `<div>${h.date} : ${h.numbers.join(" - ")}</div>`
+    ).join("")}
+  </div>
+`;
 }
 
 loadResults();
