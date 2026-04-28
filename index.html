@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Lotto Strategy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    body { font-family: Arial; background:#0f172a; color:white; text-align:center; }
+    button { padding:10px; margin:10px; border-radius:10px; background:#22c55e; }
+    .card { background:#1e293b; padding:15px; margin:10px; border-radius:10px; }
+  </style>
+</head>
+
+<body>
+
+<h1>🎯 Smart Lotto Strategy</h1>
+
+<div id="results"></div>
+
+<button onclick="generate('max')">Generate Lotto Max</button>
+<button onclick="generate('649')">Generate Lotto 6/49</button>
+
+<div id="lines"></div>
+
+<script>
+const API = "https://your-backend-url.onrender.com";
+
+async function loadResults(){
+  const res = await fetch(API + "/results");
+  const data = await res.json();
+
+  document.getElementById("results").innerHTML = `
+    <div class="card">
+      <h3>Lotto Max</h3>
+      ${data.lottoMax.numbers.join(" - ")}<br>
+      Jackpot: $${data.lottoMax.jackpot}
+    </div>
+    <div class="card">
+      <h3>Lotto 6/49</h3>
+      ${data.lotto649.numbers.join(" - ")}<br>
+      Jackpot: $${data.lotto649.jackpot}
+    </div>
+  `;
+}
+
+async function generate(game){
+  const res = await fetch(API + "/generate/" + game);
+  const data = await res.json();
+
+  document.getElementById("lines").innerHTML =
+    data.map((l,i)=>`
+      <div class="card">
+        Line ${i+1}: ${l.line.join(" - ")}<br>
+        Score: ${l.score.toFixed(2)}
+      </div>
+    `).join("");
+}
+
+loadResults();
+</script>
+
+</body>
+</html>
