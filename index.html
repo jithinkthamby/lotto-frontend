@@ -1,12 +1,44 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Smart Lotto Strategy</title>
+  <title>Smart Lotto App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
   <style>
-    body { font-family: Arial; background:#0f172a; color:white; text-align:center; }
-    button { padding:10px; margin:10px; border-radius:10px; background:#22c55e; }
-    .card { background:#1e293b; padding:15px; margin:10px; border-radius:10px; }
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      text-align: center;
+      padding: 10px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 12px;
+      margin: 10px;
+      border-radius: 10px;
+      border: none;
+      background: #22c55e;
+      color: black;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 15px;
+      margin: 10px;
+      border-radius: 12px;
+    }
+
+    .numbers {
+      font-size: 18px;
+      margin-top: 5px;
+    }
   </style>
 </head>
 
@@ -16,53 +48,78 @@
 
 <div id="results"></div>
 
-<button onclick="generate('max')">Generate Lotto Max</button>
-<button onclick="generate('649')">Generate Lotto 6/49</button>
+<button onclick="generate()">Generate Smart Numbers</button>
 
 <div id="lines"></div>
 
 <script>
-const API = "https://lotto-backend-k0k0.onrender.com";
 
+const API = "https://lotto-backend-i3j2.onrender.com"; // 🔴 REPLACE THIS
+
+// --- Load Results ---
 async function loadResults(){
-  const res = await fetch(API + "/results");
-  const data = await res.json();
+  try {
+    const res = await fetch(API + "/results");
+    const data = await res.json();
 
-  document.getElementById("results").innerHTML = `
-    <div class="card">
-      <h3>Lotto Max</h3>
-      ${data.lottoMax.numbers.join(" - ")}<br>
-      Jackpot: $${data.lottoMax.jackpot}
-    </div>
-    <div class="card">
-      <h3>Lotto 6/49</h3>
-      ${data.lotto649.numbers.join(" - ")}<br>
-      Jackpot: $${data.lotto649.jackpot}
-    </div>
-  `;
+    let latest = `
+      <div class="card">
+        <h3>Latest Ontario Lotto Max</h3>
+        <div class="numbers">${data.latest.numbers.join(" - ")}</div>
+        <div>Date: ${new Date(data.latest.date).toLocaleDateString()}</div>
+        <div>Jackpot: $${data.latest.jackpot}</div>
+      </div>
+    `;
+
+    let history = `
+      <div class="card">
+        <h3>Last 5 Draws</h3>
+        ${data.history.map(h => `
+          <div>
+            ${new Date(h.date).toLocaleDateString()} :
+            ${h.numbers.join(" - ")}
+          </div>
+        `).join("")}
+      </div>
+    `;
+
+    document.getElementById("results").innerHTML = latest + history;
+
+  } catch (err) {
+    document.getElementById("results").innerHTML =
+      `<div class="card">⚠️ Error loading results</div>`;
+    console.log(err);
+  }
 }
 
-async function generate(game){
-  const res = await fetch(API + "/generate/" + game);
-  const data = await res.json();
+// --- Generate Smart Lines ---
+async function generate(){
+  try {
+    const res = await fetch(API + "/generate");
+    const data = await res.json();
 
-  document.getElementById("results").innerHTML = `
-  <div class="card">
-    <h3>Latest Ontario Lotto Max</h3>
-    ${data.latest.numbers.join(" - ")}<br>
-    Date: ${data.latest.date}
-  </div>
+    document.getElementById("lines").innerHTML =
+      data.map((l,i)=>`
+        <div class="card">
+          <strong>Line ${i+1}</strong><br>
+          <div class="numbers">${l.line.join(" - ")}</div>
+          Score: ${l.score.toFixed(2)}
+        </div>
+      `).join("");
 
-  <div class="card">
-    <h3>Last 5 Draws</h3>
-    ${data.history.map(h =>
-      `<div>${h.date} : ${h.numbers.join(" - ")}</div>`
-    ).join("")}
-  </div>
-`;
+  } catch (err) {
+    document.getElementById("lines").innerHTML =
+      `<div class="card">⚠️ Error generating numbers</div>`;
+    console.log(err);
+  }
 }
 
+// --- Auto refresh every 60 seconds ---
+setInterval(loadResults, 60000);
+
+// Initial load
 loadResults();
+
 </script>
 
 </body>
